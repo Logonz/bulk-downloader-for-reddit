@@ -25,7 +25,7 @@ This program downloads imgur, gfycat and direct image and video links of saved p
   - [Examples](#examples)
 - [FAQ](#faq)
 - [Changelog](#changelog)
-  - [release-1.1.0-prerelease-2](#release-110-prerelease-1)
+  - [release-1.1.0-prerelease-2](#release-110-prerelease-2)
   - [release-1.1.0-prerelease-1](#release-110-prerelease-1)
   - [release-1.0.0](#release-100)
 ---
@@ -200,7 +200,7 @@ py -3 script.py .\\NEW_FOLDER --subreddit gifs pics funny --sort top --NoDownloa
 ---
 
 ## Changelog
-### [release-1.1.0-prerelease-2]()
+### [release-1.1.0-prerelease-2](https://github.com/aliparlakci/bulk-downloader-for-reddit/releases/tag/release-1.1.0-prerelease-2)
 
 - Detecting argument conflicts improved
 - "me" can now be used to resemble current user logged in
