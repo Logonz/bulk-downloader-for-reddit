@@ -6,11 +6,10 @@ saved posts from a reddit account. It is written in Python 3.
 """
 
 import argparse
-import ctypes
 import os
 import sys
 import time
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from src.downloader import Direct, Gfycat, Imgur
 from src.parser import LinkDesigner
@@ -21,7 +20,7 @@ from src.errors import *
 
 __author__ = "Ali Parlakci"
 __license__ = "GPL"
-__version__ = "1.1.0-alpha.1"
+__version__ = "release-1.1.0-prerelease-2"
 __maintainer__ = "Ali Parlakci"
 __email__ = "parlakciali@gmail.com"
 
@@ -34,16 +33,15 @@ def debug(*post):
 def getConfig(configFileName):
     """Read credentials from config.json file"""
 
-    keys = ['reddit_username',
-            'reddit_password',
-            'reddit_client_id',
-            'reddit_client_secret',
-            'imgur_client_id',
+    keys = ['imgur_client_id',
             'imgur_client_secret']
 
     if os.path.exists(configFileName):
         FILE = jsonFile(configFileName)
         content = FILE.read()
+        if "reddit_refresh_token" in content:
+            if content["reddit_refresh_token"] == "":
+                FILE.delete("reddit_refresh_token")
         for key in keys:
             try:
                 if content[key] == "":
@@ -61,7 +59,7 @@ def getConfig(configFileName):
         FILE.add(configDictionary)
         return FILE.read()
 
-def parseArguments():
+def parseArguments(arguments=[]):
     """Initialize argparse and add arguments"""
 
     parser = argparse.ArgumentParser(allow_abbrev=False,
@@ -77,10 +75,6 @@ def parseArguments():
                         help="Get posts from link",
                         metavar="link")
 
-    parser.add_argument("--auth",
-                        help="2FA key.",
-                        metavar="auth")
-
     parser.add_argument("--saved",
                         action="store_true",
                         help="Triggers saved mode")
@@ -91,7 +85,7 @@ def parseArguments():
 
     parser.add_argument("--log",
                         help="Triggers log read mode and takes a log file",
-                        type=argparse.FileType('r'),
+                        # type=argparse.FileType('r'),
                         metavar="LOG FILE")
 
     parser.add_argument("--subreddit",
@@ -103,18 +97,21 @@ def parseArguments():
     
     parser.add_argument("--multireddit",
                         help="Triggers multreddit mode and takes "\
-                             "multreddit's name without m/.",
+                             "multreddit's name without m/",
                         metavar="MULTIREDDIT",
                         type=str)
 
     parser.add_argument("--user",
-                        help="reddit username if needed",
+                        help="reddit username if needed. use \"me\" for " \
+                             "current user",
                         required="--multireddit" in sys.argv or \
                                  "--submitted" in sys.argv,
+                        metavar="redditor",
                         type=str)
 
     parser.add_argument("--search",
                         help="Searches for given query in given subreddits",
+                        metavar="query",
                         type=str)
 
     parser.add_argument("--sort",
@@ -146,7 +143,10 @@ def parseArguments():
                         action="store_true",
                         default=False)
 
-    return parser.parse_args()
+    if arguments == []:
+        return parser.parse_args()
+    else:
+        return parser.parse_args(arguments)
 
 def checkConflicts():
     """Check if command-line arguments are given correcly,
@@ -199,8 +199,11 @@ def postFromLog(fileName):
     """Analyze a log file and return a list of dictionaries containing
     submissions
     """
-
-    content = jsonFile(fileName).read()
+    if Path.is_file(Path(fileName)):
+        content = jsonFile(fileName).read()
+    else:
+        print("File not found")
+        quit()
 
     try:
         del content["HEADER"]
@@ -223,11 +226,18 @@ def prepareAttributes():
 
     if GLOBAL.arguments.search is not None:
         ATTRIBUTES["search"] = GLOBAL.arguments.search
+        if GLOBAL.arguments.sort == "hot" or \
+           GLOBAL.arguments.sort == "controversial" or \
+           GLOBAL.arguments.sort == "rising":
+            GLOBAL.arguments.sort = "relevance"
 
     if GLOBAL.arguments.sort is not None:
         ATTRIBUTES["sort"] = GLOBAL.arguments.sort
     else:
-        ATTRIBUTES["sort"] = "hot"
+        if GLOBAL.arguments.submitted:
+            ATTRIBUTES["sort"] = "new"
+        else:
+            ATTRIBUTES["sort"] = "hot"
 
     if GLOBAL.arguments.time is not None:
         ATTRIBUTES["time"] = GLOBAL.arguments.time
@@ -235,18 +245,14 @@ def prepareAttributes():
         ATTRIBUTES["time"] = "all"
 
     if GLOBAL.arguments.link is not None:
-        del ATTRIBUTES["sort"]
-        del ATTRIBUTES["time"]
 
         try:
             ATTRIBUTES = LinkDesigner(GLOBAL.arguments.link)
         except InvalidRedditLink:
-            print("Invalid reddit link")
-            quit()
+            raise InvalidRedditLink
 
-        if "search" in ATTRIBUTES:
-            print("It is already a search link")
-            quit()
+        if GLOBAL.arguments.search is not None:
+            ATTRIBUTES["search"] = GLOBAL.arguments.search
 
         if GLOBAL.arguments.sort is not None:
             ATTRIBUTES["sort"] = GLOBAL.arguments.sort
@@ -266,11 +272,7 @@ def prepareAttributes():
         ATTRIBUTES["submitted"] = True
 
         if GLOBAL.arguments.sort == "rising":
-            print("Invalid sorting type")
-            quit()
-
-    elif GLOBAL.arguments.log is not None:
-        GLOBAL.arguments.log = GLOBAL.arguments.log.name
+            raise InvalidSortingType
     
     ATTRIBUTES["limit"] = GLOBAL.arguments.limit
 
@@ -326,14 +328,9 @@ def download(submissions):
 
         if submissions[i]['postType'] == 'imgur':
             print("IMGUR",end="")
-            try:
-                credit = Imgur.get_credits()
-            except ImgurLoginError:
-                exception = "\nImgurLoginError"
-                print(exception)
-                FAILED_FILE.add({int(i+1):[str(exception),submissions[i]]})
-                downloadedCount -= 1
-                continue
+            while int(time.time() - lastRequestTime) <= 2:
+                pass
+            credit = Imgur.get_credits()
 
             IMGUR_RESET_TIME = credit['UserReset']-time.time()
             USER_RESET = ("after " \
@@ -351,9 +348,9 @@ def download(submissions):
 
             if not (credit['UserRemaining'] == 0 or \
                     credit['ClientRemaining'] == 0):
+
                 while int(time.time() - lastRequestTime) <= 2:
                     pass
-
                 lastRequestTime = time.time()
 
                 try:
@@ -364,6 +361,13 @@ def download(submissions):
                     print("It already exists")
                     duplicates += 1
                     downloadedCount -= 1
+
+                except ImgurLoginError:
+                    print(
+                        "Imgur login failed. Quitting the program "\
+                        "as unexpected errors might occur."
+                    )
+                    quit()
 
                 except Exception as exception:
                     print(exception)
@@ -434,14 +438,21 @@ def download(submissions):
         print(" Total of {} links downloaded!".format(downloadedCount))
 
 def main():
-    GLOBAL.config = getConfig('config.json')
+    if sys.argv[-1].endswith(__file__):
+        GLOBAL.arguments = parseArguments(input("> ").split())
+    else:
+        GLOBAL.arguments = parseArguments()
+    if GLOBAL.arguments.directory is not None:
+        GLOBAL.directory = Path(GLOBAL.arguments.directory)
+    else:
+        print("Invalid directory")
+        quit()
+    GLOBAL.config = getConfig(Path(PurePath(__file__).parent / 'config.json'))
 
     ####### UNCOMMENT TO DEBUG #######
     # debug({})
     ##################################
 
-    GLOBAL.arguments = parseArguments()
-    GLOBAL.directory = Path(GLOBAL.arguments.directory)
 
     checkConflicts()
 
@@ -455,7 +466,7 @@ def main():
         quit()
 
     try:
-        POSTS = getPosts(mode)
+        POSTS = getPosts(prepareAttributes())
     except NoMatchingSubmissionFound:
         print("No matching submission was found")
         quit()
@@ -470,6 +481,9 @@ def main():
         quit()
     except InvalidSortingType:
         print("Invalid sorting type has given")
+        quit()
+    except InvalidRedditLink:
+        print("Invalid reddit link")
         quit()
 
     if GLOBAL.arguments.NoDownload:

@@ -1,3 +1,6 @@
+class RedditLoginFailed(Exception):
+    pass
+
 class ImgurLoginError(Exception):
     pass
 
@@ -29,4 +32,7 @@ class MultiredditNotFound(Exception):
     pass
 
 class InvalidSortingType(Exception):
+    pass
+
+class FileNotFoundError(Exception):
     pass
