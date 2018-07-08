@@ -34,7 +34,7 @@ You can install Python 3 here: [https://www.python.org/downloads/](https://www.p
   
 You have to check "**Add Python 3 to PATH**" option when installing in order it to run correctly.
 
-*\*:Although the latest version of python is suggested, you can use 3.6.5 since it runs perfectly on that version*
+*\*Although the latest version of python is suggested, you can use 3.6.5 since it runs perfectly on that version*
 
 ---
 
