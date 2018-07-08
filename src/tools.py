@@ -2,24 +2,29 @@ import io
 import json
 import sys
 import time
+
 try:
     from pip import main as pipmain
 except:
     from pip._internal import main as pipmain
+
 from os import makedirs, path, remove
 from pathlib import Path
+
+from src.errors import FileNotFoundError
 
 def install(package):
     pipmain(['install', package])
 
 class GLOBAL:
-    """Declare global variables
-    """
+    """Declare global variables"""
 
     RUN_TIME = 0
     config = None
     arguments = None
     directory = None
+    reddit_client_id = "Jx3iqqGkSmE5sg"
+    reddit_client_secret = "PFzVAVRLN78JI48e3bQ5KsgLZp4"
     printVanilla = print
 
 class jsonFile:
@@ -38,8 +43,8 @@ class jsonFile:
             self.__writeToFile({},create=True)
 
     def read(self):
-        with open(self.FILEDIR, 'r') as f:
-            return json.load(f)
+            with open(self.FILEDIR, 'r') as f:
+                return json.load(f)
 
     def add(self,toBeAdded):
         """Takes a dictionary and merges it with json file.
@@ -61,7 +66,8 @@ class jsonFile:
         for deleteKey in deleteKeys:
             if deleteKey in data:
                 del data[deleteKey]
-        else:
+                found = True
+        if not found:
             return False
         self.__writeToFile(data)
 

@@ -1,8 +1,12 @@
 import os
 import sys
-import time
 import urllib.request
 from pathlib import Path
+
+from src.errors import (AlbumNotDownloadedCompletely, FileAlreadyExistsError,
+                        FileNameTooLong, ImgurLoginError,
+                        NotADownloadableLinkError)
+from src.tools import GLOBAL, nameCorrector, printToFile
 
 try:
     from imgurpython import *
@@ -12,12 +16,6 @@ except ModuleNotFoundError:
     install("imgurpython")
     from imgurpython import *
 
-from src.tools import GLOBAL, nameCorrector, printToFile
-from src.errors import (FileAlreadyExistsError, FileNameTooLong,
-                        NotADownloadableLinkError,
-                        AlbumNotDownloadedCompletely, ImgurLoginError)
-from ssl import SSLError as ssl_SSLError
-from requests.exceptions import SSLError as requests_exceptions_SSLError
 
 print = printToFile
 
@@ -182,16 +180,10 @@ class Imgur:
         """Initialize imgur api"""
 
         config = GLOBAL.config
-        try:
-            return ImgurClient(
-                config['imgur_client_id'],
-                config['imgur_client_secret']
-            )
-        except ssl_SSLError:
-            raise ImgurLoginError
-        except requests_exceptions_SSLError:
-            raise ImgurLoginError
-
+        return ImgurClient(
+            config['imgur_client_id'],
+            config['imgur_client_secret']
+        )
     def getId(self,submissionURL):
         """Extract imgur post id
         and determine if its a single image or album
