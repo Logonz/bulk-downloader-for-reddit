@@ -204,6 +204,7 @@ py -3 script.py .\\NEW_FOLDER --subreddit gifs pics funny --sort top --NoDownloa
 
 - Detecting argument conflicts improved
 - "me" can now be used to resemble current user logged in
+- If no arguments passed when starting up the program, it prompts for arguments now
 - Fixed bug that causes search links not to work
 - Fixed log file mode bug
 - Bug fixes
@@ -219,7 +220,6 @@ py -3 script.py .\\NEW_FOLDER --subreddit gifs pics funny --sort top --NoDownloa
 - Added search options for suitable modes
 - Detects argument conflicts more accurately
 - Added support for Two Factor Authorization
-- If no arguments passed when starting up the program, it prompts for arguments now
 - Bug fixes
 
 ### [release-1.0.0](https://github.com/aliparlakci/bulk-downloader-for-reddit/releases/tag/release-1.0)
