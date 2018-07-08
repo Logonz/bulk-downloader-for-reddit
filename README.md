@@ -24,6 +24,7 @@ This program downloads imgur, gfycat and direct image and video links of saved p
   - [Starting for the first time](#starting-for-the-first-time)
   - [Using the command line arguments](#using-the-command-line-arguments)
   - [Examples](#examples)
+- [FAQ](#faq)
 - [Changelog](#changelog)
   - [release-1.1.0-prerelease-1](#release-110-prerelease-1)
   - [release-1.0.0](#release-100)
@@ -198,6 +199,12 @@ py -3 script.py C:\\NEW_FOLDER\\ANOTHER_FOLDER --log UNNAMED_FOLDER\\FAILED.json
 ```console
 py -3 script.py .\\NEW_FOLDER --subreddit gifs pics funny --sort top --NoDownload
 ```
+
+---
+
+## FAQ
+### I can't startup the script no matter what.
+- Try `python3` or `python` or `py -3` as python have real issues about naming their program
 
 ---
 
