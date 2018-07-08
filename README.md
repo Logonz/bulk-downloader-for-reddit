@@ -187,6 +187,7 @@ py -3 script.py .\\NEW_FOLDER --subreddit gifs pics funny --sort top --NoDownloa
 ## Changelog
 ### [release-1.1.0-prerelease-2](https://github.com/aliparlakci/bulk-downloader-for-reddit/releases/tag/release-1.1.0-prerelease-2)
 
+- Now using web app.
 - Detecting argument conflicts improved
 - "me" can now be used to resemble current user logged in
 - If no arguments passed when starting up the program, it prompts for arguments now
